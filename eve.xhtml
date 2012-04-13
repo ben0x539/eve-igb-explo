@@ -146,13 +146,13 @@
             logSetOutput(pre)
           }
         }
-        var e = encodeURIComponent
+        var s = encodeURIComponent
         r.send(
-          "password=" + e(log_password.value) +
-          "&sig-id-letters=" + e(log_id_letters.value) +
-          "&sig-id-digits=" + e(log_id_digits.value) +
-          "&sig-type=" + e(log_type.value) +
-          "&sig-name=" + e(log_name.value))
+          "password=" + s(log_password.value) +
+          "&sig-id-letters=" + s(log_id_letters.value) +
+          "&sig-id-digits=" + s(log_id_digits.value) +
+          "&sig-type=" + s(log_type.value) +
+          "&sig-name=" + s(log_name.value))
       }
 
       function go() {
@@ -183,7 +183,8 @@
       body, html {
         color:              #989898;
         background:         #222;
-        font-family:        sans-serif;
+        font-family:        "EVE Sans Neue",sans-serif;
+        font-size:          10pt;
       }
 
       ::selection {
@@ -200,7 +201,7 @@
 
       h1 {
         margin:             0;
-        font-size:          medium;
+        font-size:          10pt;
         font-weight:        normal;
       }
 
@@ -209,18 +210,21 @@
         padding-left:       0.3em;
         padding-right:      0.3em;
         margin-top:         0;
-        font-size:          medium;
+        font-size:          10pt;
         font-weight:        normal;
       }
 
       input, select, option {
-        background-color:   #212121;
+        font-size:          10pt;
+        background-color:   #222;
         color:              #bfbfbf;
         border:             1px solid black;
       }
 
       button {
+        font-size:          10pt;
         color:              #9a9a9a;
+        background-image:   -moz-linear-gradient(to bottom, black, #151515);
         background:         -webkit-gradient(linear, left top, left bottom, from(black), to(#151515));
         border:             1px solid black;
         border-bottom:      1px solid #353535;
@@ -244,18 +248,26 @@
 
       table.siglist {
         white-space:        nowrap;
+        border-spacing:     0;
+        border-collapse:    collapse;
       }
 
-      table.siglist .sig-current-system {
-        font-weight:        bold;
+      table.siglist .sig-current-system td {
+        color:              #65bf65;
       }
 
       table.siglist th {
         text-align:         left;
+        font-weight:        normal
       }
 
-      table.siglist td {
-        background-color:   #111;
+      table.siglist td, table.siglist th {
+        background-color:   #222;
+        border-top:         1px solid #595959;
+        border-bottom:      1px solid #595959;
+        border-left:        1px solid #3e3e3e;
+        border-right:       1px solid #3e3e3e;
+        padding:            2px 6px;
       }
 
       table.siglist .sig-system, table.siglist .sig-id {
