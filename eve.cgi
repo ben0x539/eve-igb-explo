@@ -63,6 +63,7 @@ def log()
 
   id_letters, id_digits, type, name =
     [data["sig-id-letters"].upcase, data["sig-id-digits"], data["sig-type"], data["sig-name"]]
+  name ||= ""
   id_full = "#{id_letters}-#{id_digits}"
   raise UserError, "invalid id" unless /^[A-Z]{3}-\d{3}$/.match(id_full)
   raise UserError, "invalid type" unless ["Unknown", "Gravimetric", "Magnetometric", "Radar", "Ladar"].include?(type)
