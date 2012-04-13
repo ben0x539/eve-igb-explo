@@ -82,7 +82,7 @@
             ["time", "system", "id", "type", "name"].forEach(function(str) {
               var td = document.createElement("td")
               td.appendChild(document.createTextNode(item[str]))
-              td.setAttribute("class", "sig" + str)
+              td.setAttribute("class", "sig-" + str)
               tr.appendChild(td)
             })
             table.appendChild(tr)
@@ -182,6 +182,7 @@
     <style type="text/css"><![CDATA[
       body {
         background-color:   #ddd;
+        font-family:        sans-serif;
       }
 
       .section {
@@ -214,6 +215,10 @@
         font-family:        monospace;
       }
 
+      table.siglist {
+        white-space:        nowrap;
+      }
+
       table.siglist .sig-current-system {
         font-weight:        bold;
       }
@@ -225,8 +230,8 @@
       table.siglist td {
         background-color:   #eee;
       }
-      
-      table.siglist .sigsystem, table.siglist .sigid {
+
+      table.siglist .sig-system, table.siglist .sig-id {
         font-family:        monospace;
       }
     ]]></style>
