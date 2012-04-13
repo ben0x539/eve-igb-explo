@@ -51,6 +51,7 @@
 
       function onCheckResponse(response) {
         removeChildren(check_output)
+        check_input.value = ""
         var results = JSON.parse(response)
         if (results.length == 0) {
           checkSetOutputText("no results")
