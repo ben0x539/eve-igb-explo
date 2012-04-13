@@ -67,7 +67,7 @@ def log()
   id_full = "#{id_letters}-#{id_digits}"
   raise UserError, "invalid id" unless /^[A-Z]{3}-\d{3}$/.match(id_full)
   raise UserError, "invalid type" unless ["Unknown", "Gravimetric", "Magnetometric", "Radar", "Ladar"].include?(type)
-  raise UserError, "invalid name" unless /^[A-Za-z ]*$/.match(name)
+  raise UserError, "invalid name" unless /^[A-Za-z' ]*$/.match(name)
 
   File.open("eve-data", "a") do |f|
     f.flock(File::LOCK_EX)
