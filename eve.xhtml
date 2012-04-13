@@ -180,21 +180,28 @@
       }
     ]]></script>
     <style type="text/css"><![CDATA[
-      body {
-        background-color:   #ddd;
+      body, html {
+        color:              #989898;
+        background:         #222;
         font-family:        sans-serif;
       }
 
+      ::selection {
+        background:         #adadad ! important;
+      }
+
       .section {
-        background-color:   white;
-        border:             2px solid grey;
+        background-color:   black;
+        border:             1px solid #636363;
         margin:             0.3em;
         padding:            0.3em;
+        color:              #bfbfbf;
       }
 
       h1 {
         margin:             0;
-        font-size:          large;
+        font-size:          medium;
+        font-weight:        normal;
       }
 
       .section h2 {
@@ -202,9 +209,29 @@
         padding-left:       0.3em;
         padding-right:      0.3em;
         margin-top:         0;
-        border-bottom:      2px solid grey;
-        border-left:        2px solid grey;
-        font-size:          large;
+        font-size:          medium;
+        font-weight:        normal;
+      }
+
+      input, select, option {
+        background-color:   #212121;
+        color:              #bfbfbf;
+        border:             1px solid black;
+      }
+
+      button {
+        color:              #9a9a9a;
+        background:         -webkit-gradient(linear, left top, left bottom, from(black), to(#151515));
+        border:             1px solid black;
+        border-bottom:      1px solid #353535;
+      }
+
+      button:hover {
+        border:             1px solid #999;
+      }
+
+      button:active {
+        border:             1px solid white;
       }
 
       form {
@@ -228,7 +255,7 @@
       }
 
       table.siglist td {
-        background-color:   #eee;
+        background-color:   #111;
       }
 
       table.siglist .sig-system, table.siglist .sig-id {
@@ -244,7 +271,7 @@
       <form id="check-form" method="get" action="eve.cgi/check">
         <p>
           <input type="text" id="check-input" name="sig-id" size="9" />
-          <input type="submit" />
+          <button>Look up</button>
         </p>
       </form>
       <p id="check-output" />
@@ -255,7 +282,7 @@
         <p>
           Password: <input type="password" size="12"
                            name="password" id="log-password" />
-          <input type="submit" />
+          <button>Log</button>
         </p>
         <p>
           <input type="text" size="3" maxlength="3"
