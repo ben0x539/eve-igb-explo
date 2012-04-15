@@ -70,7 +70,7 @@ def log()
   raise UserError, "error: invalid system name (???)" unless /^[\w-]+$/.match(system)
 
   id_letters, id_digits, type, name =
-    [data["sig-id-letters"].upcase, data["sig-id-digits"], data["sig-type"], data["sig-name"]]
+    [data["sig-id-letters"].upcase, data["sig-id-digits"], data["sig-type"], data["sig-name"].strip]
   name ||= ""
   id_full = "#{id_letters}-#{id_digits}"
   raise UserError, "invalid id" unless /^[A-Z]{3}-\d{3}$/.match(id_full)
