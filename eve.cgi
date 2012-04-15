@@ -5,8 +5,16 @@ require 'cgi'
 class UserError < Exception; end
 
 def parse_query_string(str)
-  return {} if !str
-  Hash[str.split(/\&/).map {|s| s.split(/=/).map(&CGI.method(:unescape))}]
+  res = Hash.new("")
+  return res unless str
+  str.split(/\&/).each do |s|
+    i = s.index("=")
+    if i
+      res[CGI.unescape(s[0...i])] = CGI.unescape(s[i+1..-1])
+    end
+  end
+
+  res
 end
 
 def iterate_data(search)
