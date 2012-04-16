@@ -25,9 +25,10 @@ in space.
 During the scanning procedure, sites will be displayed under an ID consisting
 of three letters and three digits, such as `ABC-123`, usually well before the
 site is actually reachable or can even be classified. This ID will remain
-constant for the duration of the site's existence, so upon later searches in
-the same solar system, it may be useful to compare the known IDs of
-known-useless sites against the ones currently visible.
+constant for the duration of the site's existence (or until the next downtime,
+whichever is sooner), so upon later searches in the same solar system, it may
+be useful to compare the known IDs of known-useless sites against the ones
+currently visible.
 
 This tool will simply allow you to keep a log of identified sites and search
 through the log by ID. The sole advantage over a text file or spreadsheet is
