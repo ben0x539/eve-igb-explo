@@ -18,6 +18,7 @@ def parse_query_string(str)
 end
 
 def iterate_data(search)
+  search = search.downcase
   File.open("eve-data") do |f|
     f.flock(File::LOCK_SH)
     f.each_line do |l|
@@ -25,7 +26,7 @@ def iterate_data(search)
       unless m = /^time=(\d+) system=([\w-]+) id=([A-Z]{3}-\d{3}) type=(\w+) name="([^"]*)"$/.match(l)
         raise "Couldn't parse data entry: " + l
       end
-      if m[3].index(search)
+      if m[3].downcase.index(search)
         yield(*m.captures)
       end
     end
