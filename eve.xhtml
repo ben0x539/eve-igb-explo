@@ -69,9 +69,9 @@
             tr = document.createElement("tr");
             var cl = []
             if (time > downtime)
-              cl.push("sig-recent")
+              cl.push("sig-recent");
             if (item.updated)
-              cl.push("sig-updated")
+              cl.push("sig-updated");
             if (cl.length)
               tr.setAttribute("class", cl.join(" "));
             ["time", "id", "type", "name"].forEach(function(str) {
