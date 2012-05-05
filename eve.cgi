@@ -66,17 +66,22 @@ end
 
 def submit()
   data = parse_query_string(input = STDIN.read(4096))
-  raise UserError, "bad password" unless data["password"] == 'secretpasswd'
-  trusted = ENV["HTTP_EVE_TRUSTED"]
-  raise UserError, "must be used with EVE ingame browser" unless trusted
-  raise UserError, "error: site must be trusted to detect system name" unless trusted == "Yes"
-  system = ENV["HTTP_EVE_SOLARSYSTEMNAME"]
-  raise UserError, "error: couldn't detect system name" unless system
-  raise UserError, "error: invalid system name (???)" unless /^[-\w ]+$/.match(system)
+  raise UserError, "bad password" unless data["password"] == 'secretpassword'
+  system = data["system"]
+  if !system || system.empty?
+    trusted = ENV["HTTP_EVE_TRUSTED"]
+    raise UserError, "error: must give system name or use EVE ingame browser" \
+      unless trusted
+    raise UserError, "error: must give system name or trust site" \
+      unless trusted == "Yes"
+    system = ENV["HTTP_EVE_SOLARSYSTEMNAME"]
+    raise UserError, "error: couldn't detect system name" unless system
+    raise UserError, "error: invalid system name (???)" unless /^[-\w ]+$/.match(system)
+  end
   now = Time.now
   now_str = now.to_i.to_s
   sigs = load_signatures(now, system)
-  new_sigs = parse_signatures(data["sig-input"])
+  new_sigs = parse_signatures(data["input"])
   to_log = []
   old_sigs = sigs.dup
   new_sigs.each do |sig|

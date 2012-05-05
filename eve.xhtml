@@ -3,7 +3,8 @@
   <head>
     <title>Exploration Log</title>
     <script type="text/javascript"><![CDATA[
-      var log_form, log_password, log_input, log_output, log_current
+      var log_form, log_password, log_system,
+        log_input, log_output, log_current
 
       function removeChildren(r) {
         var child
@@ -116,7 +117,8 @@
         }
         var s = encodeURIComponent
         r.send("password=" + s(log_password.value) +
-               "&sig-input=" + s(log_input.value))
+               "&system=" + s(log_system.value) +
+               "&input=" + s(log_input.value))
       }
 
       function go() {
@@ -130,6 +132,7 @@
 
         log_form = document.getElementById("log-form")
         log_password = document.getElementById("log-password")
+        log_system = document.getElementById("log-system")
         log_input = document.getElementById("log-input")
         log_output = document.getElementById("log-output")
         log_form.addEventListener("submit", onLogSubmit)
@@ -250,10 +253,12 @@
         <p>
           Password: <input type="password" size="12"
                            name="password" id="log-password" />
+          Solar system: <input type="text" size="12"
+                               name="system" id="log-system" />
           <button>Log</button>
         </p>
         <p class="textarea-container">
-          <textarea rows="8" name="sig-input" id="log-input" />
+          <textarea rows="8" name="input" id="log-input" />
         </p>
       </form>
       <p id="log-output" />

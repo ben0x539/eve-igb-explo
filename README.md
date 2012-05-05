@@ -41,7 +41,8 @@ Usage
 
 Use the EVE Online ingame browser to navigate to `eve.xhtml`. While scanning,
 copy and paste the entire scan results table into the form field and press
-Submit whenever you see something new.
+Submit whenever you see something new. Fill in the password, but leave the
+solar system field empty for normal usage.
 
 You will see a table with the information you entered up to now for this solar
 system, along with timestamps indicating when a signature was first recorded
@@ -62,9 +63,6 @@ with downtime, so entries more recent than the last downtime are highlighted.
 Future direction
 ----------------
 
-* The ingame browser should really not be required. Maybe a "solar system"
-  input field should be added to the form and then hidden if the ingame
-  browser trusts the page.
 * The password should really be read from a separate credentials file outside
   of the webserver's document root, I suppose.
 * A standalone webserver might be useful so that the whole thing can be run
