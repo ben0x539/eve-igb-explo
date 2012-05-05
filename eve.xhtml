@@ -4,24 +4,24 @@
     <title>Exploration Log</title>
     <script type="text/javascript"><![CDATA[
       var log_form, log_password, log_system,
-        log_input, log_output, log_current
+        log_input, log_output, log_current;
 
       function removeChildren(r) {
-        var child
+        var child;
         while ((child = r.firstChild))
-          r.removeChild(child)
+          r.removeChild(child);
       }
 
       function logSetOutput(obj) {
-        log_output.parentNode.replaceChild(obj, log_output)
-        log_output = obj
-        obj.setAttribute("id", "log-output")
+        log_output.parentNode.replaceChild(obj, log_output);
+        log_output = obj;
+        obj.setAttribute("id", "log-output");
       }
 
       function logSetOutputText(str) {
-        var p = document.createElement("p")
-        p.appendChild(document.createTextNode(str))
-        logSetOutput(p)
+        var p = document.createElement("p");
+        p.appendChild(document.createTextNode(str));
+        logSetOutput(p);
       }
 
       function pad(n){return n<10 ? '0'+n : n}
@@ -29,113 +29,112 @@
         return time.getFullYear() +
                "-" + pad(time.getMonth()+1) +
                "-" + pad(time.getDate()) +
-               " " + pad(time.getHours()) + 
-               ":" + pad(time.getMinutes())
+               " " + pad(time.getHours()) +
+               ":" + pad(time.getMinutes());
       }
 
       function getLastDowntime() {
-        var t = new Date()
+        var t = new Date();
         if (t.getUTCHours() < 11)
-          t.setUTCDate(t.getUTCDate() - 1)
-        t.setUTCHours(11)
-        return t
+          t.setUTCDate(t.getUTCDate() - 1);
+        t.setUTCHours(11);
+        return t;
       }
 
       function logFormatOutput(signatures) {
         if (signatures.length == 0) {
-          logSetOutputText("no signatures")
+          logSetOutputText("no signatures");
         } else {
-          var div = document.createElement("div")
-          var btn = document.createElement("button")
-          btn.appendChild(document.createTextNode("Clear results"))
+          var div = document.createElement("div");
+          var btn = document.createElement("button");
+          btn.appendChild(document.createTextNode("Clear results"));
           btn.addEventListener("click", function(e) {
-            logSetOutput(document.createElement("p"))
-          })
-          div.appendChild(btn)
-          var table = document.createElement("table")
-          table.setAttribute("class", "siglist")
-          var tr = document.createElement("tr"); // heh
+            logSetOutput(document.createElement("p"));
+          });
+          div.appendChild(btn);
+          var table = document.createElement("table");
+          table.setAttribute("class", "siglist");
+          var tr = document.createElement("tr");
           ["Time", "ID", "Type", "Name"].forEach(function(str) {
-            var th = document.createElement("th")
-            th.appendChild(document.createTextNode(str))
-            tr.appendChild(th)
-          })
-          table.appendChild(tr)
-          var downtime = getLastDowntime()
+            var th = document.createElement("th");
+            th.appendChild(document.createTextNode(str));
+            tr.appendChild(th);
+          });
+          table.appendChild(tr);
+          var downtime = getLastDowntime();
           for (var i = 0; i < signatures.length; ++i) {
-            var item = signatures[i]
-            var time = new Date(item.time * 1000)
-            item.time = formatTime(time)
-            tr = document.createElement("tr")
+            var item = signatures[i];
+            var time = new Date(item.time * 1000);
+            item.time = formatTime(time);
+            tr = document.createElement("tr");
             if (time > downtime)
-              tr.setAttribute("class", "sig-highlight")
-            delete item.current; // welp
+              tr.setAttribute("class", "sig-highlight");
             ["time", "id", "type", "name"].forEach(function(str) {
-              var td = document.createElement("td")
-              td.appendChild(document.createTextNode(item[str]))
-              td.setAttribute("class", "sig-" + str)
-              tr.appendChild(td)
-            })
-            table.appendChild(tr)
+              var td = document.createElement("td");
+              td.appendChild(document.createTextNode(item[str]));
+              td.setAttribute("class", "sig-" + str);
+              tr.appendChild(td);
+            });
+            table.appendChild(tr);
           }
-          div.appendChild(table)
-          logSetOutput(div)
+          div.appendChild(table);
+          logSetOutput(div);
         }
       }
 
       function onLogResponse(data) {
-        var sigs
+        var sigs;
         try {
-          sigs = JSON.parse(data)
+          sigs = JSON.parse(data);
         } catch (e) {
-          logSetOutputText("error: bad json data: " + data)
-          return
+          logSetOutputText("error: bad json data: " + data);
+          return;
         }
-        logFormatOutput(sigs)
+        logFormatOutput(sigs);
 
-        log_input.value = ""
+        log_input.value = "";
       }
 
       function onLogSubmit(e) {
-        e.preventDefault()
-        logSetOutputText("Submitting...")
+        e.preventDefault();
+        logSetOutputText("Submitting...");
         if (log_current)
-          log_current.abort()
-        var r = log_current = new XMLHttpRequest()
-        r.open("POST", "http://londeroth.org/~ben/eve.cgi")
+          log_current.abort();
+        var r = log_current = new XMLHttpRequest();
+        r.open("POST", "http://londeroth.org/~ben/eve.cgi");
         r.onreadystatechange = function(e) {
           if (r.readyState != 4)
             return;
           if (r.status == 200) {
-            onLogResponse(r.responseText)
+            onLogResponse(r.responseText);
           } else {
-            var pre = document.createElement("pre")
+            var pre = document.createElement("pre");
             pre.appendChild(document.createTextNode(
-                "Error: " + r.statusText + ": " + r.responseText))
-            logSetOutput(pre)
+                "Error: " + r.statusText + ": " + r.responseText));
+            logSetOutput(pre);
           }
         }
-        var s = encodeURIComponent
+        var s = encodeURIComponent;
         r.send("password=" + s(log_password.value) +
                "&system=" + s(log_system.value) +
-               "&input=" + s(log_input.value))
+               "&input=" + s(log_input.value));
       }
 
       function go() {
         if (window.CCPEVE) {
           // would limit to /~ben/, but looks like the igb chokes on ~
-          CCPEVE.requestTrust("http://londeroth.org/")
+          CCPEVE.requestTrust("http://londeroth.org/");
         }
 
-        var noscript = document.getElementById("noscript")
-        noscript.parentNode.removeChild(noscript)
+        var noscript = document.getElementById("noscript");
+        noscript.parentNode.removeChild(noscript);
 
-        log_form = document.getElementById("log-form")
-        log_password = document.getElementById("log-password")
-        log_system = document.getElementById("log-system")
-        log_input = document.getElementById("log-input")
-        log_output = document.getElementById("log-output")
-        log_form.addEventListener("submit", onLogSubmit)
+        log_form = document.getElementById("log-form");
+        log_password = document.getElementById("log-password");
+        log_system = document.getElementById("log-system");
+        log_input = document.getElementById("log-input");
+        log_output = document.getElementById("log-output");
+        log_form.addEventListener("submit", onLogSubmit);
       }
     ]]></script>
     <style type="text/css"><![CDATA[
