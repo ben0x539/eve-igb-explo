@@ -3,28 +3,12 @@
   <head>
     <title>Exploration Log</title>
     <script type="text/javascript"><![CDATA[
-      var check_form, check_input, check_output, check_current
-      var log_form, log_password, log_id_letters, log_id_digits,
-        log_type, log_name, log_output, log_current
-      function send_request(type, target, success, error, data) {
-      }
+      var log_form, log_password, log_input, log_output, log_current
 
       function removeChildren(r) {
         var child
         while ((child = r.firstChild))
           r.removeChild(child)
-      }
-
-      function checkSetOutput(obj) {
-        check_output.parentNode.replaceChild(obj, check_output)
-        check_output = obj
-        obj.setAttribute("id", "check-output")
-      }
-
-      function checkSetOutputText(str) {
-        var p = document.createElement("p")
-        p.appendChild(document.createTextNode(str))
-        checkSetOutput(p)
       }
 
       function logSetOutput(obj) {
@@ -39,9 +23,8 @@
         logSetOutput(p)
       }
 
+      function pad(n){return n<10 ? '0'+n : n}
       function formatTime(time) {
-        time = new Date(time * 1000)
-        function pad(n){return n<10 ? '0'+n : n}
         return time.getFullYear() +
                "-" + pad(time.getMonth()+1) +
                "-" + pad(time.getDate()) +
@@ -49,37 +32,44 @@
                ":" + pad(time.getMinutes())
       }
 
-      function onCheckResponse(response) {
-        removeChildren(check_output)
-        check_input.value = ""
-        var results = JSON.parse(response)
-        if (results.length == 0) {
-          checkSetOutputText("no results")
+      function getLastDowntime() {
+        var t = new Date()
+        if (t.getUTCHours() < 11)
+          t.setUTCDate(t.getUTCDate() - 1)
+        t.setUTCHours(11)
+        return t
+      }
+
+      function logFormatOutput(signatures) {
+        if (signatures.length == 0) {
+          logSetOutputText("no signatures")
         } else {
           var div = document.createElement("div")
           var btn = document.createElement("button")
           btn.appendChild(document.createTextNode("Clear results"))
           btn.addEventListener("click", function(e) {
-            checkSetOutput(document.createElement("p"))
+            logSetOutput(document.createElement("p"))
           })
           div.appendChild(btn)
           var table = document.createElement("table")
           table.setAttribute("class", "siglist")
           var tr = document.createElement("tr"); // heh
-          ["Time", "System", "ID", "Type", "Name"].forEach(function(str) {
+          ["Time", "ID", "Type", "Name"].forEach(function(str) {
             var th = document.createElement("th")
             th.appendChild(document.createTextNode(str))
             tr.appendChild(th)
           })
           table.appendChild(tr)
-          for (var i = 0; i < results.length; ++i) {
-            var item = results[i]
-            item.time = formatTime(item.time)
+          var downtime = getLastDowntime()
+          for (var i = 0; i < signatures.length; ++i) {
+            var item = signatures[i]
+            var time = new Date(item.time * 1000)
+            item.time = formatTime(time)
             tr = document.createElement("tr")
-            if (item.current)
-              tr.setAttribute("class", "sig-current-system")
+            if (time > downtime)
+              tr.setAttribute("class", "sig-highlight")
             delete item.current; // welp
-            ["time", "system", "id", "type", "name"].forEach(function(str) {
+            ["time", "id", "type", "name"].forEach(function(str) {
               var td = document.createElement("td")
               td.appendChild(document.createTextNode(item[str]))
               td.setAttribute("class", "sig-" + str)
@@ -88,55 +78,33 @@
             table.appendChild(tr)
           }
           div.appendChild(table)
-          checkSetOutput(div)
+          logSetOutput(div)
         }
       }
 
-      function onCheckSubmit(e) {
-        e.preventDefault()
-        removeChildren(check_output)
-        checkSetOutputText("Querying...")
-        if (check_current)
-          check_current.abort()
-        var r = check_current = new XMLHttpRequest()
-        r.open("GET", "http://londeroth.org/~ben/eve.cgi/check?format=json&sig-id=" + check_input.value)
-        r.onreadystatechange = function(e) {
-          if (r.readyState != 4)
-            return;
-          removeChildren(check_output)
-          if (r.status == 200) {
-            onCheckResponse(r.responseText)
-          } else {
-            var pre = document.createElement("pre")
-            pre.appendChild(document.createTextNode(
-                "Error: " + r.statusText + ": " + r.responseText))
-            checkSetOutput(pre)
-          }
+      function onLogResponse(data) {
+        var sigs
+        try {
+          sigs = JSON.parse(data)
+        } catch (e) {
+          logSetOutputText("error: bad json data: " + data)
+          return
         }
-        r.send(null)
-      }
+        logFormatOutput(sigs)
 
-      function onLogResponse(text) {
-        logSetOutputText(text)
-        
-        log_id_letters.value = ""
-        log_id_digits.value = ""
-        log_type.value = "Unknown"
-        log_name.value = ""
+        log_input.value = ""
       }
 
       function onLogSubmit(e) {
         e.preventDefault()
-        removeChildren(log_output)
         logSetOutputText("Submitting...")
         if (log_current)
           log_current.abort()
         var r = log_current = new XMLHttpRequest()
-        r.open("POST", "http://londeroth.org/~ben/eve.cgi/log/")
+        r.open("POST", "http://londeroth.org/~ben/eve.cgi")
         r.onreadystatechange = function(e) {
           if (r.readyState != 4)
             return;
-          removeChildren(log_output)
           if (r.status == 200) {
             onLogResponse(r.responseText)
           } else {
@@ -147,12 +115,8 @@
           }
         }
         var s = encodeURIComponent
-        r.send(
-          "password=" + s(log_password.value) +
-          "&sig-id-letters=" + s(log_id_letters.value) +
-          "&sig-id-digits=" + s(log_id_digits.value) +
-          "&sig-type=" + s(log_type.value) +
-          "&sig-name=" + s(log_name.value))
+        r.send("password=" + s(log_password.value) +
+               "&sig-input=" + s(log_input.value))
       }
 
       function go() {
@@ -164,17 +128,9 @@
         var noscript = document.getElementById("noscript")
         noscript.parentNode.removeChild(noscript)
 
-        check_form = document.getElementById("check-form")
-        check_input = document.getElementById("check-input")
-        check_output = document.getElementById("check-output")
-        check_form.addEventListener("submit", onCheckSubmit)
-
         log_form = document.getElementById("log-form")
         log_password = document.getElementById("log-password")
-        log_id_letters = document.getElementById("log-id-letters")
-        log_id_digits = document.getElementById("log-id-digits")
-        log_type = document.getElementById("log-type")
-        log_name = document.getElementById("log-name")
+        log_input = document.getElementById("log-input")
         log_output = document.getElementById("log-output")
         log_form.addEventListener("submit", onLogSubmit)
       }
@@ -214,12 +170,24 @@
         font-weight:        normal;
       }
 
-      input, select, option {
+      input, textarea {
         font-family:        "EVE Sans Neue",sans-serif;
         font-size:          10pt;
         background-color:   #222;
         color:              #bfbfbf;
         border:             1px solid black;
+      }
+
+      textarea {
+        font-family:        monospace;
+        overflow:           auto;
+        white-space:        nowrap;
+        width:              100%;
+      }
+
+      .textarea-container {
+        padding-left:       8px;
+        padding-right:      16px;
       }
 
       button {
@@ -244,17 +212,13 @@
         display:            inline;
       }
 
-      input[name="sig-id-letters"], input[name="sig-id-digits"] {
-        font-family:        monospace;
-      }
-
       table.siglist {
         white-space:        nowrap;
         border-spacing:     0;
         border-collapse:    collapse;
       }
 
-      table.siglist .sig-current-system td {
+      table.siglist .sig-highlight td {
         color:              #65bf65;
       }
 
@@ -272,7 +236,7 @@
         padding:            2px 6px;
       }
 
-      table.siglist .sig-system, table.siglist .sig-id {
+      table.siglist .sig-id {
         font-family:        monospace;
       }
     ]]></style>
@@ -280,40 +244,19 @@
   <body onload="go()">
     <h1>Exploration logging tool</h1>
     <p id="noscript">JavaScript is recommended.</p>
-    <div class="section"> <!-- welp -->
-      <h2>Check signature IDs</h2>
-      <form id="check-form" method="get" action="eve.cgi/check">
-        <p>
-          <input type="text" id="check-input" name="sig-id" size="9" />
-          <button>Look up</button>
-        </p>
-      </form>
-      <p id="check-output" />
-    </div>
     <div class="section">
       <h2>Log signature</h2>
-      <form id="log-form" method="post" action="eve.cgi/log">
+      <form id="log-form" method="post" action="eve.cgi">
         <p>
           Password: <input type="password" size="12"
                            name="password" id="log-password" />
           <button>Log</button>
         </p>
-        <p>
-          <input type="text" size="3" maxlength="3"
-                 name="sig-id-letters" id="log-id-letters"
-            />-<input type="text" size="3" maxlength="3"
-                      name="sig-id-digits" id="log-id-digits" />
-          <select name="sig-type" id="log-type">
-            <option value="Unknown">Unknown</option>
-            <option value="Gravimetric">Gravimetric</option>
-            <option value="Magnetometric">Magnetometric</option>
-            <option value="Radar">Radar</option>
-            <option value="Ladar">Ladar</option>
-          </select>
-          <input type="text" size="25" name="sig-name" id="log-name" />
+        <p class="textarea-container">
+          <textarea rows="8" name="sig-input" id="log-input" />
         </p>
-        <p id="log-output" />
       </form>
+      <p id="log-output" />
     </div>
   </body>
 </html>

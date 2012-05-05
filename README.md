@@ -40,28 +40,30 @@ Usage
 -----
 
 Use the EVE Online ingame browser to navigate to `eve.xhtml`. While scanning,
-enter an ID into the first form and submit it to see if the ID has already
-been identified and can be skipped. You will see the time and location along
-with the information you entered for the site when first discovering it. Log
-entries matching the current solar system will be displayed in bold. If the
-ID is new (or was seen elsewhere, or a long time ago), proceed as usual.
+copy and paste the entire scan results table into the form field and press
+Submit whenever you see something new.
+
+You will see a table with the information you entered up to now for this solar
+system, along with timestamps indicating when a signature was first recorded
+or last amended: When you paste a new scan results table, it will amend
+missing type and name columns in existing entries as well as append new
+entries.
 
 Once you know the type (*Unknown*, *Gravimetric*, etc.) of a site, you might
-decide it is not worth investigating further and enter the information into
-the second form. You can omit the fourth field, the precise name of the site,
-since you will often not know it by the time you decide to skip the site. The
-`cgi` script will automatically complete your amend your submission with the
-current time and location.
+decide it is not worth investigating further. On subsequent visit to the same
+system, you will see the previously recorded information once you submit your
+first set of scan results, and hence can quickly determine whether new sites
+have spawned since your last visit.
+
+The displayed entries are automatically filtered for the current solar system
+and timestamps no older than 72 hours.
 
 Future direction
 ----------------
 
 * The ingame browser should really not be required. Maybe a "solar system"
-  input field should be added to the second form and then hidden if the ingame
+  input field should be added to the form and then hidden if the ingame
   browser trusts the page.
-* Maybe the two forms should be collapsed into one so that new IDs only have
-  to be entered once. But on the other hand, when confronted with multiple IDs
-  at the same time, it might not actually make anything easier.
 * The password should really be read from a separate credentials file outside
   of the webserver's document root, I suppose.
 * A standalone webserver might be useful so that the whole thing can be run
