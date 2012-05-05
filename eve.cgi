@@ -65,7 +65,7 @@ def load_signatures(time, system)
 end
 
 def submit()
-  data = parse_query_string(input = STDIN.read(4096))
+  data = parse_query_string(STDIN.read(4096))
   raise UserError, "bad password" unless data["password"] == 'secretpassword'
   system = data["system"]
   if !system || system.empty?
@@ -89,8 +89,10 @@ def submit()
     if !old_sig ||
        (old_sig.type.empty? && !sig.type.empty?) ||
        (old_sig.name.empty? && !sig.name.empty?)
-      sigs[sig.id] = [now_str, sig]
+      sigs[sig.id] = [now_str, sig, true]
       to_log << sig
+    else
+      sigs[sig.id][2] = true
     end
   end
 
@@ -102,9 +104,11 @@ def submit()
     end
   end
 
-  json_sigs = sigs.values.sort_by{|time, sig| -time.to_i}.map {|time, sig|
-    sprintf '{"time":%s,"id":"%s","type":"%s","name":"%s"}',
-      time, sig.id, sig.type, sig.name
+  json_sigs = sigs.values.sort_by{ |time, sig, updated|
+    [updated ? 0 : 1, -time.to_i, sig.id]
+  }.map { |time, sig, updated|
+    sprintf '{"time":%s,"id":"%s","type":"%s","name":"%s","updated":%s}',
+      time, sig.id, sig.type, sig.name, !!updated
   }
   "[#{json_sigs.join(",")}]"
 end

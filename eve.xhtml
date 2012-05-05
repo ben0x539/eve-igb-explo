@@ -67,8 +67,13 @@
             var time = new Date(item.time * 1000);
             item.time = formatTime(time);
             tr = document.createElement("tr");
+            var cl = []
             if (time > downtime)
-              tr.setAttribute("class", "sig-highlight");
+              cl.push("sig-recent")
+            if (item.updated)
+              cl.push("sig-updated")
+            if (cl.length)
+              tr.setAttribute("class", cl.join(" "));
             ["time", "id", "type", "name"].forEach(function(str) {
               var td = document.createElement("td");
               td.appendChild(document.createTextNode(item[str]));
@@ -114,10 +119,10 @@
             logSetOutput(pre);
           }
         }
-        var s = encodeURIComponent;
-        r.send("password=" + s(log_password.value) +
-               "&system=" + s(log_system.value) +
-               "&input=" + s(log_input.value));
+        var post = "password=" + encodeURIComponent(log_password.value) +
+                   "&system=" + encodeURIComponent(log_system.value) +
+                   "&input=" + encodeURIComponent(log_input.value);
+        r.send(post)
       }
 
       function go() {
@@ -220,8 +225,12 @@
         border-collapse:    collapse;
       }
 
-      table.siglist .sig-highlight td {
+      table.siglist .sig-recent td {
         color:              #65bf65;
+      }
+
+      table.siglist .sig-updated .sig-id {
+        font-weight:        bold;
       }
 
       table.siglist th {
