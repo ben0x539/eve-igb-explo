@@ -56,7 +56,8 @@ first set of scan results, and hence can quickly determine whether new sites
 have spawned since your last visit.
 
 The displayed entries are automatically filtered for the current solar system
-and timestamps no older than 72 hours.
+and timestamps no older than 72 hours. Note that signature IDs change
+with downtime, so entries more recent than the last downtime are highlighted.
 
 Future direction
 ----------------
