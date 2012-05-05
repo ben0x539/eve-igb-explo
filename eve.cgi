@@ -55,8 +55,9 @@ def load_signatures(time, system)
       unless m = /^time=(\d+) system="([^"]*)" id=([A-Z]{3}-\d{3}) type=(\w*) name="([^"]*)"$/.match(l)
         raise "Couldn't parse data entry: " + l
       end
-      next unless m[2] == system && time_seconds - m[1].to_i < 60*60*24*3
-      sigs[m[3]] = [time, Signature.new(*m.captures[2 .. -1])]
+      logged_time = m[1]
+      next unless m[2] == system && time_seconds - logged_time.to_i < 60*60*24*3
+      sigs[m[3]] = [logged_time, Signature.new(*m.captures[2 .. -1])]
     end
   end
 
@@ -65,7 +66,7 @@ end
 
 def submit()
   data = parse_query_string(input = STDIN.read(4096))
-  raise UserError, "bad password" unless data["password"] == 'secretpassword'
+  raise UserError, "bad password" unless data["password"] == 'secretpasswd'
   trusted = ENV["HTTP_EVE_TRUSTED"]
   raise UserError, "must be used with EVE ingame browser" unless trusted
   raise UserError, "error: site must be trusted to detect system name" unless trusted == "Yes"
@@ -73,6 +74,7 @@ def submit()
   raise UserError, "error: couldn't detect system name" unless system
   raise UserError, "error: invalid system name (???)" unless /^[-\w ]+$/.match(system)
   now = Time.now
+  now_str = now.to_i.to_s
   sigs = load_signatures(now, system)
   new_sigs = parse_signatures(data["sig-input"])
   to_log = []
@@ -82,12 +84,11 @@ def submit()
     if !old_sig ||
        (old_sig.type.empty? && !sig.type.empty?) ||
        (old_sig.name.empty? && !sig.name.empty?)
-      sigs[sig.id] = [now, sig]
+      sigs[sig.id] = [now_str, sig]
       to_log << sig
     end
   end
 
-  now_str = now.to_i.to_s
   File.open("eve-data", "a") do |f|
     f.flock(File::LOCK_EX)
     to_log.each do |sig|
@@ -98,7 +99,7 @@ def submit()
 
   json_sigs = sigs.values.sort_by{|time, sig| -time.to_i}.map {|time, sig|
     sprintf '{"time":%s,"id":"%s","type":"%s","name":"%s"}',
-      time.to_i.to_s, sig.id, sig.type, sig.name
+      time, sig.id, sig.type, sig.name
   }
   "[#{json_sigs.join(",")}]"
 end
