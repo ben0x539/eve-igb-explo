@@ -96,7 +96,7 @@ def submit()
     end
   end
 
-  json_sigs = sigs.values.sort_by{|time, sig| time}.map {|time, sig|
+  json_sigs = sigs.values.sort_by{|time, sig| -time.to_i}.map {|time, sig|
     sprintf '{"time":%s,"id":"%s","type":"%s","name":"%s"}',
       time.to_i.to_s, sig.id, sig.type, sig.name
   }
