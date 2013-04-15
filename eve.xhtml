@@ -32,6 +32,11 @@
                " " + pad(time.getHours()) +
                ":" + pad(time.getMinutes());
       }
+      function formatDate(time) {
+        return pad(time.getYear()-100) +
+               "-" + pad(time.getMonth()+1) +
+               "-" + pad(time.getDate());
+      }
 
       function getLastDowntime() {
         var t = new Date();
@@ -74,12 +79,26 @@
               cl.push("sig-updated");
             if (cl.length)
               tr.setAttribute("class", cl.join(" "));
-            ["time", "id", "type", "name"].forEach(function(str) {
-              var td = document.createElement("td");
+            var td;
+            ["time", "id", "type"].forEach(function(str) {
+              td = document.createElement("td");
               td.appendChild(document.createTextNode(item[str]));
               td.setAttribute("class", "sig-" + str);
               tr.appendChild(td);
             });
+            td = document.createElement("td");
+            var name = item["name"];
+            if (name && name.length > 0) {
+              var link = document.createElement("a");
+              link.appendChild(document.createTextNode(name));
+              link.setAttribute("href",
+                "https://wiki.goonfleet.com/"+name.replace(/ /g, "_"));
+              td.appendChild(link);
+            } else {
+              td.appendChild(document.createTextNode(""));
+            }
+            td.setAttribute("class", "sig-name");
+            tr.appendChild(td);
             table.appendChild(tr);
           }
           div.appendChild(table);
@@ -140,6 +159,9 @@
         log_input = document.getElementById("log-input");
         log_output = document.getElementById("log-output");
         log_form.addEventListener("submit", onLogSubmit);
+
+        var date = document.getElementById("date");
+        date.appendChild(document.createTextNode(formatDate(new Date())));
       }
     ]]></script>
     <style type="text/css"><![CDATA[
@@ -223,7 +245,7 @@
         border-collapse:    collapse;
       }
 
-      table.siglist .sig-recent td {
+      table.siglist .sig-recent td, table.siglist .sig-recent td a {
         color:              #65bf65;
       }
 
@@ -261,6 +283,7 @@
           <input type="text" size="12" placeholder="Solar system"
                  name="system" id="log-system" />
           <button>Log</button>
+          <span id="date"/>
         </p>
         <p class="textarea-container">
           <textarea rows="8" name="input" id="log-input" />
