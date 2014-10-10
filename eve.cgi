@@ -1,12 +1,13 @@
 #!/usr/bin/env ruby
 
 require 'cgi'
+require 'sqlite3'
 
 class UserError < Exception; end
 
 SIG_ID_PATTERN = /^[A-Z]{3}-\d{3}$/
 SIG_NAME_PATTERN = /^[A-Za-z', ]*$/
-SIG_TYPES = ["", "Gravimetric", "Magnetometric", "Radar", "Ladar", "Unknown"]
+SIG_TYPES = ["", "Unknown", "Wormhole", "Gas Site", "Relic Site", "Data Site", "Combat Site"]
 
 Signature = Struct.new(:id, :type, :name)
 
@@ -45,20 +46,16 @@ def parse_signatures(str)
   res
 end
 
-def load_signatures(time, system)
+def load_signatures(sql, system)
+  query = <<-END
+    SELECT "sigid", "type", "name", "time"
+      FROM "signature"
+      WHERE "system" = ?
+            AND julianday("time", 'unixepoch') > julianday('now', 'unixepoch', '-2 days')
+  END
   sigs = {}
-  time_seconds = time.to_i
-  File.open("eve-data") do |f|
-    f.flock(File::LOCK_SH)
-    f.each_line do |l|
-      l.chomp!
-      unless m = /^time=(\d+) system="([^"]*)" id=([A-Z]{3}-\d{3}) type=(\w*) name="([^"]*)"$/.match(l)
-        raise "Couldn't parse data entry: " + l
-      end
-      logged_time = m[1]
-      next unless m[2] == system && time_seconds - logged_time.to_i < 60*60*24*3
-      sigs[m[3]] = [logged_time, Signature.new(*m.captures[2 .. -1])]
-    end
+  sql.execute(query, [system]) do |sigid, type, name, time|
+    sigs[sigid] = [time, Signature.new(sigid, type, name)]
   end
 
   sigs
@@ -66,7 +63,7 @@ end
 
 def submit()
   data = parse_query_string(STDIN.read(4096))
-  raise UserError, "bad password" unless data["password"] == 'secretpassword'
+  raise UserError, "bad password" unless data["password"] == 'fourtwenty'
   system = data["system"]
   if !system || system.empty?
     trusted = ENV["HTTP_EVE_TRUSTED"]
@@ -78,39 +75,61 @@ def submit()
     raise UserError, "error: couldn't detect system name" unless system
     raise UserError, "error: invalid system name (???)" unless /^[-\w ]+$/.match(system)
   end
-  now = Time.now
-  now_str = now.to_i.to_s
-  sigs = load_signatures(now, system)
-  new_sigs = parse_signatures(data["input"])
-  to_log = []
-  old_sigs = sigs.dup
-  new_sigs.each do |sig|
-    old_time, old_sig = sigs[sig.id]
-    if !old_sig ||
-       (old_sig.type.empty? && !sig.type.empty?) ||
-       (old_sig.name.empty? && !sig.name.empty?)
-      sigs[sig.id] = [now_str, sig, true]
-      to_log << sig
-    else
-      sigs[sig.id][2] = true
+  result = nil
+  SQLite3::Database.new("eve-igb-explo-db/db.sqlite") do |sql|
+    sql.execute <<-END
+      CREATE TABLE IF NOT EXISTS "signature" (
+        "sigid"  STRING PRIMARY KEY,
+        "type"   STRING,
+        "name"   STRING,
+        "system" STRING,
+        "time"   INTEGER
+      );
+      CREATE TABLE IF NOT EXISTS "group" (
+        "id"   INTEGER PRIMARY KEY,
+        "name" STRING
+      );
+      CREATE TABLE IF NOT EXISTS "type" (
+        "id"   INTEGER PRIMARY KEY,
+        "name" STRING
+      );
+    END
+    sigs = load_signatures(sql, system)
+    new_sigs = parse_signatures(data["input"])
+    to_log = []
+    old_sigs = sigs.dup
+    now_str = Time.now.to_i.to_s
+    new_sigs.each do |sig|
+      old_time, old_sig = sigs[sig.id]
+      if !old_sig ||
+         (old_sig.type.empty? && !sig.type.empty?) ||
+         (old_sig.name.empty? && !sig.name.empty?)
+        sigs[sig.id] = [now_str, sig, true]
+        to_log << sig
+      else
+        sigs[sig.id][2] = true
+      end
     end
-  end
 
-  File.open("eve-data", "a") do |f|
-    f.flock(File::LOCK_EX)
     to_log.each do |sig|
-      f.printf "time=%s system=\"%s\" id=%s type=%s name=\"%s\"\n",
-        now_str, system, sig.id, sig.type, sig.name
+      sql.execute(<<-END, sig.id, sig.type, sig.name, system)
+        INSERT OR REPLACE INTO "signature"
+            ("sigid", "type", "name", "system", "time")
+          VALUES
+            (?, ?, ?, ?, strftime('%s', 'now'))
+      END
     end
+
+    json_sigs = sigs.values.sort_by{ |time, sig, updated|
+      [updated ? 0 : 1, -time.to_i, sig.id]
+    }.map { |time, sig, updated|
+      sprintf '{"time":%s,"id":"%s","type":"%s","name":"%s","updated":%s}',
+        time, sig.id, sig.type, sig.name, !!updated
+    }
+    result = "[#{json_sigs.join(",")}]"
   end
 
-  json_sigs = sigs.values.sort_by{ |time, sig, updated|
-    [updated ? 0 : 1, -time.to_i, sig.id]
-  }.map { |time, sig, updated|
-    sprintf '{"time":%s,"id":"%s","type":"%s","name":"%s","updated":%s}',
-      time, sig.id, sig.type, sig.name, !!updated
-  }
-  "[#{json_sigs.join(",")}]"
+  result
 end
 
 def go()
